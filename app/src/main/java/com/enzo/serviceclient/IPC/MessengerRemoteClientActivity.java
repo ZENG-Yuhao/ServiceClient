@@ -59,6 +59,8 @@ public class MessengerRemoteClientActivity extends AppCompatActivity {
         intent.setPackage("com.zeng.servicedemo.IPC.");
         bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
 
+        Log.d("RemoteClientActivity", "create");
+
         btn_upload = (Button) findViewById(R.id.btn_upload);
         btn_download = (Button) findViewById(R.id.btn_download);
         input = (EditText) findViewById(R.id.input);
@@ -77,6 +79,7 @@ public class MessengerRemoteClientActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                     append(strIn + " uploaded.");
+                    Log.d("RemoteClientActivity", " data upload:" + strIn);
                 }
             }
         });
