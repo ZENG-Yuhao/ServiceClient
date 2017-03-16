@@ -16,6 +16,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.enzo.serviceclient.R;
 
@@ -40,8 +41,8 @@ public class MessengerRemoteClientActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
             if (msg.what == MSG_REPLY) {
-                if (msg.obj != null) {
-                    String data = (String) msg.obj;
+                if (msg.getData() != null) {
+                    String data = (String) msg.getData().get("content");
                     append(data + " downloaded.");
                     Log.d("ClientMessageHandler", "Data download --> " + data);
                 }
@@ -55,9 +56,12 @@ public class MessengerRemoteClientActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messenger_remote_client);
 
-        Intent intent = new Intent("com.zeng.servicedemo.IPC.MessengerService");
-        intent.setPackage("com.zeng.servicedemo.IPC.");
-        bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
+        // after API 5.0, implicit intent is forbidden. A package name is necessary.
+        // you should add this <intent-filter> in your server's manifests file.
+        //  <action android:name="com.zeng.servicedemo.ACTION_BIND"/>
+        Intent intent = new Intent("com.zeng.servicedemo.ACTION_BIND");
+        intent.setPackage("com.zeng.servicedemo");
+        bindService(intent, mServiceConnection, 0);
 
         Log.d("RemoteClientActivity", "create");
 
@@ -72,14 +76,15 @@ public class MessengerRemoteClientActivity extends AppCompatActivity {
                 String strIn = input.getText().toString();
                 if (isServiceBound) {
                     Message msg = Message.obtain(null, MSG_UPLOAD, 0, 0);
-                    msg.obj = strIn;
+                    Bundle data = new Bundle();
+                    data.putString("content", strIn);
+                    msg.setData(data);
                     try {
                         mService.send(msg);
                     } catch (RemoteException e) {
                         e.printStackTrace();
                     }
                     append(strIn + " uploaded.");
-                    Log.d("RemoteClientActivity", " data upload:" + strIn);
                 }
             }
         });
@@ -118,12 +123,14 @@ public class MessengerRemoteClientActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             mService = new Messenger(iBinder);
             isServiceBound = true;
+            Toast.makeText(MessengerRemoteClientActivity.this, "Service bound.", Toast.LENGTH_SHORT).show();
         }
 
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
             isServiceBound = false;
             mService = null;
+            Toast.makeText(MessengerRemoteClientActivity.this, "Service unbound.", Toast.LENGTH_SHORT).show();
         }
     }
 }
